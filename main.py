@@ -1,3 +1,4 @@
+import random
 def create_account():
     username=input("Entrez votre nom d'utilisateur:")
     password=input("Entrez votre mot de passe:")
@@ -14,6 +15,24 @@ def login():
                 print("Connexion réussie!")
                 return
     print("Nom d'utilisateur ou mot de passe incorrect.")
+
+#Cette fonction permet de générer une clé de session aléatoire dans un bitarray
+def genSessionKey():
+    sessionKey=''
+    while True:
+        keySize=int(input("Quelle taille de clé voulez-vous générer? (128, 192 ou 256): "))
+        if keySize == 128:
+            sessionKey=format(random.getrandbits(128), '0128b')
+            break
+        elif keySize == 192:
+            sessionKey=format(random.getrandbits(192), '0192b')
+            break
+        elif keySize == 256:
+            sessionKey=format(random.getrandbits(256), '0256b')
+            break
+        else:
+            print("Wrong key size")
+    return sessionKey
 
 def main():
     ans=True
