@@ -1,38 +1,42 @@
-def create_account():
-    username=input("Entrez votre nom d'utilisateur:")
-    password=input("Entrez votre mot de passe:")
-    with open('users.txt', 'a') as file:
-        file.write(username + ' ' + password + '\n')
-    print("Votre compte a été créé avec succès!")
+import argparse
+import re
+from client import *
+from server import *
 
-def login():
-    username=input("Entrez votre nom d'utilisateur:")
-    password=input("Entrez votre mot de passe:")
-    with open('users.txt', 'r') as file:
-        for line in file:
-            if username in line and password in line:
-                print("Connexion réussie!")
-                return
-    print("Nom d'utilisateur ou mot de passe incorrect.")
-
+#Cette fonction permet de créer un parser pour faire des argument au programme
+def initializeParser():
+    parser = argparse.ArgumentParser(prog="coffre-fort GS15", description="Projet de coffre fort pour l'UE GS15", usage="Usage ./main.py -s [-p]\n ./main.py -c [-ip] [-p]")
+    parser.add_argument("-s", "--serverMode", help="Passe le programme en mode Serveur",action="store_true", default=False)
+    parser.add_argument("-c", "--clientMode", help="Passe le programme en mode Client",action="store_true", default=False)
+    parser.add_argument("-ip", "--ipAddress", type=str, help="chosi une adresse IP pour transmettre de la donnée", required=False, default="127.0.0.1")
+    parser.add_argument("-p", "--port", type=int, help="choisi un port pour transmettre la donnée", required=False, default=999)
+    args = parser.parse_args()
+    return args
+#Cette fonction permet de tester les arguments pour vérifier s'ils sont utilisables pour le programme
+def testArgs(args):
+    validArgs = True
+    regexIP = re.compile("^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$")
+    if args.serverMode == True and args.clientMode == True:
+        print("Error: Le programme ne peut pas être à la fois client et serveur.\n")
+        validArgs = False
+    if args.port < 0 or args.port > 65535:
+        print("Error: le numéro de port doit être un nombre entre 0 et 65535\n")
+        validArgs = False
+    if not bool(re.search(regexIP, args.ipAddress)):
+        print("Error: invalid IP address\n")
+        validArgs = False
+    if validArgs == False :
+        print("Shuting down program...")
+        args.clientMode = False
+        args.serverMode = False
+#fonction principale du programme
 def main():
-    ans=True
-    while ans:
-        print("Bonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
-        print("1. Créer votre compte")
-        print("2. Vous connecter")
-        print("3. Quitter")
-
-        ans=input("Votre choix: ")
-        if ans=="1":
-            create_account()
-        elif ans=="2":
-            login()
-        elif ans=="3":
-            print("\nAu revoir!")
-            ans = False
-        else:
-            print("\nChoix invalide, veuillez réessayer.")
+    args = initializeParser()
+    testArgs(args)
+    if args.serverMode == True:
+        serverMode(args)
+    elif args.clientMode == True:
+        clientMode(args)
 
 if __name__ == '__main__':
     main()
