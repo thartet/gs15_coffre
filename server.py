@@ -3,12 +3,11 @@ import socket
 #fonction permettant de créer un compte côté serveur
 #à faire: modifier la fonction pour vérifier que deux compte n'ont pas le même nom d'utilisateur
 def create_account(connecSock):
-    connecSock.send("Entrez votre nom d'utilisateur:".encode())
-    recievedData = connecSock.recv(8192)
-    username = recievedData.decode()
-    connecSock.send("Entrez votre mot de passe:".encode())
-    recievedData = connecSock.recv(8192)
-    password = recievedData.decode()
+    receivedData = connecSock.recv(8192)
+    username = receivedData.decode()
+    receivedData = connecSock.recv(8192)
+    password = receivedData.decode()
+
     with open('users.txt', 'a') as file:
         file.write(username + ' ' + password + '\n')
     connecSock.send("Votre compte a été créé avec succès!".encode())
@@ -17,10 +16,11 @@ def create_account(connecSock):
 #à faire: modifier la fonction pour vérifier différement les mots de passe, exemple comparaison de hash
 #à faire: faire retourner la fonction vers d'autre option pour l'utilisateur: consulter/déposer des fichiers
 def login(connecSock):
-    recievedData = connecSock.recv(8192)
-    username = str(recievedData.decode())
-    recievedData = connecSock.recv(8192)
-    password = str(recievedData.decode())
+    receivedData = connecSock.recv(8192)
+    username = str(receivedData.decode())
+    receivedData = connecSock.recv(8192)
+    password = str(receivedData.decode())
+    
     with open('users.txt', 'r') as file:
         for line in file:
             if username in line and password in line:

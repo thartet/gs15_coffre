@@ -7,8 +7,9 @@ def clientCreateAccount(clientSock):
     clientSock.send(username.encode())
     password = input("Entrez votre mot de passe: ")
     clientSock.send(password.encode())
-    recievedData = clientSock.recv(8192)
-    print(recievedData.decode())
+
+    receivedData = clientSock.recv(8192)
+    print(receivedData.decode())
 
 #fonction permettant de se connecter à un compte côté client
 #à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
@@ -17,8 +18,9 @@ def clientLogin(clientSock):
     clientSock.send(username.encode())
     password = input("Entrez votre mot de passe: ")
     clientSock.send(password.encode())
-    recievedData = clientSock.recv(8192)
-    print(recievedData.decode())
+    receivedData = clientSock.recv(8192)
+
+    print(receivedData.decode())
 
 #fonction du programme pour le faire fonctionner en mode Client
 #à faire: rajouter des options
@@ -28,7 +30,7 @@ def clientMode(args):
     clientSock.connect(socketAddr)
     ans=True
     while ans:
-        print("Bonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
+        print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
         print("1. Créer votre compte")
         print("2. Vous connecter")
         print("3. Quitter")
