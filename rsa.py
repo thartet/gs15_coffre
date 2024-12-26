@@ -43,7 +43,7 @@ def decrypt (c, sk):
 
 def main():
     pk, sk = RSA()
-    result = encrypt("test",pk)
+    result = encrypt(5,pk)
     print("The encrypted message is :", result)
     print("The decrypted message is : ", decrypt(result, sk))
 

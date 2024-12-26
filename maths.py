@@ -19,7 +19,7 @@ def bezout(a, b):
     returns the inverse of a modulo b
     """
     (d, u, v) = euclide(a, b)
-    return u
+    return u % b
 
 def is_prime(n,k=10):
     """
@@ -42,7 +42,7 @@ def is_prime(n,k=10):
         s = s // 2
     
     for i in range(k):
-        a = random.randrange( n - 1 ) + 1
+        a = random.randrange(2, n - 1)
         temp = s
         mod = pow(a, temp, n)
         while temp != n - 1 and mod != 1 and mod != n - 1:
