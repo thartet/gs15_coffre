@@ -60,13 +60,7 @@ def genSessionKey():
             print("Wrong key size")
     return sessionKey
 
-def main():
-    ans=True
-    while ans:
-        print("Bonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
-        print("1. Créer votre compte")
-        print("2. Vous connecter")
-        print("3. Quitter")
+
 #fonction principale du programme
 def main():
     args = initializeParser()
