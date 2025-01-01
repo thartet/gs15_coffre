@@ -63,4 +63,14 @@ def random_prime(bits) :
         rnumber = random.randrange(2**(bits-1), 2**(bits))
         if is_prime(rnumber):
             return rnumber
-
+        
+def random_generator(p):
+    """
+    Generate a random generator
+    p : prime number
+    returns the generator
+    """
+    while True:
+        alpha = random.randint(2, p-1)
+        if pow(alpha, (p-1)//2, p) != 1:
+            return alpha
