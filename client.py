@@ -1,4 +1,5 @@
 import socket
+from DiffieHelman import *
 
 #fonction permettant de créer un compte côté client
 #à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
@@ -28,6 +29,11 @@ def clientMode(args):
     clientSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socketAddr= (args.ipAddress,args.port)
     clientSock.connect(socketAddr)
+    clientPuk, clientPrk = genPublicAndPrivateKey(clientSock.getsockname()[0])
+    clientSock.send(str(clientPuk).encode())
+    recievedData = clientSock.recv(8192)
+    serverPuk = int(recievedData.decode())
+    clientSk = genSecretKey(serverPuk, clientPrk)
     ans=True
     while ans:
         print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
