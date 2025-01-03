@@ -1,4 +1,6 @@
 import random
+import socket
+from Hmac import *
 from helpFunction import * 
 from hash import *
 #représentation du nombre d'or sur 32 bit, et r le nombre de permutation
@@ -271,10 +273,7 @@ def invRound(i, Biplus1, Ki):
     return Bi    
 
 def encrypt(plainText, key):
-    print("Text: ", plainText)
     bitText = toBitstring(plainText)
-    print("bitsting Text:", bitText)
-    print("Key: ", key)
     genKey = initializeKey(key)
     w = keyExpansion (genKey)
     KHat, K = SBoxTransform(w)
@@ -282,12 +281,9 @@ def encrypt(plainText, key):
     for i in range(r):
         B = round(i, B, KHat[i])
     cipherText = applyPermutation(FPTable, B)
-    print("cipher Text: ", cipherText)
     return cipherText
 
 def decrypt(cipherText, key):
-    print("Cipher text: ", cipherText)
-    print("key: ", key)
     genKey=initializeKey(key)
     w = keyExpansion (genKey)
     KHat, K = SBoxTransform(w)
@@ -296,4 +292,36 @@ def decrypt(cipherText, key):
         B = invRound(i, B, KHat[i])
     plainText = applyPermutation(FPTable, B)
     plainText = toText(plainText)
-    print("plain text: ", plainText)
+    return plainText
+
+def sendMessage(key, message, socket):
+    messageBlocks = textParser(message)
+    messageHmac = hmac(key, message)
+    print("HMAC du message: ", messageHmac)
+    socket.send(str(len(messageBlocks)).encode())
+    cipherText = []
+    for i in range(len(messageBlocks)):
+        cipherBlock = encrypt(messageBlocks[i], key)
+        cipherText.append(cipherBlock)
+        socket.send(str(cipherBlock).encode())
+    print("Texte chiffré: ", cipherText)
+    socket.send(messageHmac.encode())
+    
+
+def reciveMessage(key, socket):
+    recivedData = socket.recv(8192)
+    nbBlocks = int(recivedData.decode())
+    message = ""
+    for i in range(nbBlocks):
+        recivedData = socket.recv(128)
+        plainText = decrypt(recivedData.decode(), key)
+        message += plainText
+    recivedData = socket.recv(256)
+    recivedHmac = recivedData.decode()
+    messageHmac = hmac(key, message)
+    print(messageHmac)
+    if messageHmac == recivedHmac :
+        print("Hmac vérifié")
+    else:
+        print("Attention, Hmac différent")
+    return message

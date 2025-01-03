@@ -7,8 +7,14 @@ def toBitstring(text):
         bitString += "00000000"
     return bitString
 
+def textParser(textToParse):
+    out = [(textToParse[i:i+16]) for i in range(0, len(textToParse), 16)]
+    return out
+
 def toText(bitstring):
     plainList= [bitstring[i:i+8] for i in range(0, len(bitstring), 8)]
+    while '00000000' in plainList:
+        plainList.remove('00000000')
     for i in range(len(plainList)):
         plainList[i] = chr(int(plainList[i], 2))
     plainText ="".join(plainList)

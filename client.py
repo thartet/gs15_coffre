@@ -1,5 +1,6 @@
 import socket
 from DiffieHelman import *
+from Cobra import *
 
 #fonction permettant de créer un compte côté client
 #à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
@@ -34,6 +35,7 @@ def clientMode(args):
     recievedData = clientSock.recv(8192)
     serverPuk = int(recievedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
+    sendMessage(clientSk, "test" * 33, clientSock)
     ans=True
     while ans:
         print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")

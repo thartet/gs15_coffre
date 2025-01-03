@@ -1,5 +1,6 @@
 import socket
 from DiffieHelman import *
+from Cobra import *
 
 #fonction permettant de créer un compte côté serveur
 #à faire: modifier la fonction pour vérifier que deux compte n'ont pas le même nom d'utilisateur
@@ -8,7 +9,6 @@ def create_account(connecSock):
     username = receivedData.decode()
     receivedData = connecSock.recv(8192)
     password = receivedData.decode()
-
     with open('users.txt', 'a') as file:
         file.write(username + ' ' + password + '\n')
     connecSock.send("Votre compte a été créé avec succès!".encode())
@@ -47,6 +47,8 @@ def serverMode(args):
         clientPuk = int(recievedData.decode())
         connecSock.send(str(serverPuk).encode())
         serverSk = genSecretKey(clientPuk, serverPrk)
+        message = reciveMessage(serverSk, connecSock)
+        print(message)
         recievedData = connecSock.recv(8192)
         print("{} octet reçu de {}:{}".format(len(recievedData), addr, connecSock.getsockname()[1]))
         print("Serveur client:", connecSock.getpeername(), "\nAddresse serveur:", connecSock.getsockname())
