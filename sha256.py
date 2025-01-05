@@ -82,3 +82,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+def testSha256():
+    print("Texte à hacher: hello")
+    main()

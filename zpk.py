@@ -45,31 +45,31 @@ class Schnorr:
         return verification == M
 
 
-def generate_keys():
+def generate_keys(p, prk):
     """
     Generate related public and private keys.
     returns the public key, the private key, the prime number and the generator
     """
-    p = random_prime(256)
     alpha = random_generator(p)
-    s = random.randint(1, p - 1)  # private key
-    pub = pow(alpha, s, p)  # public key
-    return pub, s, p, alpha
+    pub = pow(alpha, prk, p)  # public key
+    return pub, alpha
 
 
 def main():
     # Key generation
-    pub, s, p, alpha = generate_keys()
+    p = random_prime(256)
+    prk = random.randint(1, p - 1) 
+    pub, alpha = generate_keys(p, prk)
     print(f"Generated public key: {pub}")
-    print(f"Generated private key: {s}")
-
-    schnorr = Schnorr(pub, s+2, p, alpha)
-
+    print(f"Generated private key: {prk}")
+    schnorr = Schnorr(pub, prk, p, alpha)
     m, M = schnorr.nicolas_choosing_m()
     r = schnorr.remi_choosing_r()
     proof = schnorr.nicolas_proving(m, r)
     valid = schnorr.remi_veryfing(proof, r, M)
     print(f"Proof valid: {valid}")
 
+def testZpk():
+    main()
 if __name__ == "__main__":
     main()

@@ -303,9 +303,8 @@ def reciveMessage(key, socket):
     for i in range(nbBlocks):
         recivedData = socket.recv(128)
         plainText = decrypt(recivedData.decode(), key)
-        print(plainText)
         message += plainText
-    recivedData = socket.recv(256)
+    recivedData = socket.recv(64)
     recivedHmac = recivedData.decode()
     messageHmac = hmac(key, message)
     print(messageHmac)
@@ -314,4 +313,12 @@ def reciveMessage(key, socket):
     else:
         print("Attention, Hmac différent")
     return message
+
+def cobraTest(key):
+    testString = "test"
+    print("Texte à chiffrer: ", testString)
+    cipherText = encrypt(testString, key)
+    print("Texte chiffré: ", cipherText)
+    plainText = decrypt(cipherText, key)
+    print("Texte déchiffré: ", plainText)
 

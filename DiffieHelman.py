@@ -17,3 +17,9 @@ def genSecretKey(otherPublicKey, privateKey):
     print("Secret Key is: ", secretKey)
     return secretKey
 
+def testDF():
+    puk1, prk1 = genPublicAndPrivateKey("127.0.0.1")
+    puk2, prk2 = genPublicAndPrivateKey("127.0.0.2")
+    sk1 = genSecretKey(puk2, prk1)
+    sk2 = genSecretKey(puk1, prk2)
+

@@ -430,3 +430,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def testSha3():
+    print("Texte à hacher: hello")
+    main()

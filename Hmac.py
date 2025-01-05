@@ -13,5 +13,9 @@ def hmac (key, message):
     hmac = sha256(secondToHash.encode()).hex()
     return hmac
 
-
+def testHmac(key):
+    testString= "test"
+    print("Texte à hacher: ", testString)
+    testHmac = hmac(key, testString)
+    print("Hmac généré :", testHmac)
 
