@@ -21,8 +21,28 @@ def clientLogin(clientSock):
     password = input("Entrez votre mot de passe: ")
     clientSock.send(password.encode())
     receivedData = clientSock.recv(8192)
-
     print(receivedData.decode())
+
+
+def fileTransfer(key, socket):
+    filePath = input("Entrez le chemin absolu du fichier: ")
+    f = open(filePath, "r")
+    lines = f.readlines()
+    #sendMessage(key, str(len(lines)), socket)
+    cipherData = ""
+    for i in range(len(lines)):
+        textBlocks = textParser(lines[i])
+        for j in range(len(textBlocks)):
+            cipherData += encrypt(textBlocks[j], key)
+    print(cipherData)
+    print(len(cipherData))
+    fileHmac = hmac(key, cipherData)
+    print("HMAC du fichier: ", fileHmac)
+    socket.send(str(len(cipherData)).encode())
+    socket.send(fileHmac.encode())
+    socket.send(cipherData.encode())
+    newFileName = input("Sauvegarder le fichier comme: ")
+    sendMessage(key, newFileName, socket)
 
 #fonction du programme pour le faire fonctionner en mode Client
 #à faire: rajouter des options
@@ -35,7 +55,6 @@ def clientMode(args):
     recievedData = clientSock.recv(8192)
     serverPuk = int(recievedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
-    sendMessage(clientSk, "test" * 33, clientSock)
     ans=True
     while ans:
         print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")

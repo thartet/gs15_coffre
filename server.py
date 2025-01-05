@@ -29,6 +29,29 @@ def login(connecSock):
                 return 0
     connecSock.send("Nom d'utilisateur ou mot de passe incorrect.".encode())
 
+def recieveFile(key, socket):
+    fileLen = int(socket.recv(32).decode())
+    print(fileLen)
+    hmacToVerify = socket.recv(64).decode()
+    print(hmacToVerify)
+    recieveData=""
+    while len(recieveData)<fileLen:
+        recieveData += socket.recv(8192).decode()
+    print(recieveData)
+    parsedData = blockParser(recieveData)
+    plainText = ""
+    for i in range(len(parsedData)):
+        plainText += decrypt(parsedData[i], key)
+    fileHmac = hmac(key, recieveData)
+    print(fileHmac)
+    if fileHmac == hmacToVerify :
+        print("Hmac vérifié")
+    else:
+        print("Attention, Hmac différent")
+    newFileName = reciveMessage(key, socket)
+    f = open(newFileName, "w")
+    f.write(plainText)
+
 #fonction décrivant le comportement du programme en mode serveur
 #à faire: ajouter d'autre options
 def serverMode(args):
@@ -47,8 +70,6 @@ def serverMode(args):
         clientPuk = int(recievedData.decode())
         connecSock.send(str(serverPuk).encode())
         serverSk = genSecretKey(clientPuk, serverPrk)
-        message = reciveMessage(serverSk, connecSock)
-        print(message)
         recievedData = connecSock.recv(8192)
         print("{} octet reçu de {}:{}".format(len(recievedData), addr, connecSock.getsockname()[1]))
         print("Serveur client:", connecSock.getpeername(), "\nAddresse serveur:", connecSock.getsockname())

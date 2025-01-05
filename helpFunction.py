@@ -11,6 +11,10 @@ def textParser(textToParse):
     out = [(textToParse[i:i+16]) for i in range(0, len(textToParse), 16)]
     return out
 
+def blockParser(stringToParse):
+    out = [(stringToParse[i:i+128]) for i in range(0, len(stringToParse), 128)]
+    return out
+
 def toText(bitstring):
     plainList= [bitstring[i:i+8] for i in range(0, len(bitstring), 8)]
     while '00000000' in plainList:

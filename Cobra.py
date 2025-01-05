@@ -117,23 +117,6 @@ def SBoxTransform (w):
         KHat.append(applyPermutation(IPTable,K[i]))
     return KHat, K
 
-#Cette fonction permet de générer une clé de session aléatoire dans un bitarray
-def genSessionKey():
-    sessionKey=''
-    while True:
-        keySize=int(input("Quelle taille de clé voulez-vous générer? (128, 192 ou 256): "))
-        if keySize == 128:
-            sessionKey=format(random.getrandbits(128), '0128b')
-            break
-        elif keySize == 192:
-            sessionKey=format(random.getrandbits(192), '0192b')
-            break
-        elif keySize == 256:
-            sessionKey=format(random.getrandbits(256), '0256b')
-            break
-        else:
-            print("Wrong key size")
-    return sessionKey
 
 def SBitslice(box, words):
     """Prends 'words', une liste de 4 bitstrings de 32bits, word le moins significatif en premier. 
@@ -295,10 +278,13 @@ def decrypt(cipherText, key):
     return plainText
 
 def sendMessage(key, message, socket):
+    print(message)
     messageBlocks = textParser(message)
     messageHmac = hmac(key, message)
     print("HMAC du message: ", messageHmac)
-    socket.send(str(len(messageBlocks)).encode())
+    print(len(messageBlocks))
+    cipherLen = encrypt(str(len(messageBlocks)), key)
+    socket.send(str(cipherLen).encode())
     cipherText = []
     for i in range(len(messageBlocks)):
         cipherBlock = encrypt(messageBlocks[i], key)
@@ -309,12 +295,15 @@ def sendMessage(key, message, socket):
     
 
 def reciveMessage(key, socket):
-    recivedData = socket.recv(8192)
-    nbBlocks = int(recivedData.decode())
+    recivedData = socket.recv(128)
+    print(recivedData)
+    plainNbBlocks = decrypt(recivedData.decode(), key)
+    nbBlocks = int(plainNbBlocks)
     message = ""
     for i in range(nbBlocks):
         recivedData = socket.recv(128)
         plainText = decrypt(recivedData.decode(), key)
+        print(plainText)
         message += plainText
     recivedData = socket.recv(256)
     recivedHmac = recivedData.decode()
@@ -325,3 +314,4 @@ def reciveMessage(key, socket):
     else:
         print("Attention, Hmac différent")
     return message
+

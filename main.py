@@ -42,23 +42,6 @@ def testArgs(args):
         args.clientMode = False
         args.serverMode = False
 
-#Cette fonction permet de générer une clé de session aléatoire dans un bitarray
-def genSessionKey():
-    sessionKey=''
-    while True:
-        keySize=int(input("Quelle taille de clé voulez-vous générer? (128, 192 ou 256): "))
-        if keySize == 128:
-            sessionKey=format(random.getrandbits(128), '0128b')
-            break
-        elif keySize == 192:
-            sessionKey=format(random.getrandbits(192), '0192b')
-            break
-        elif keySize == 256:
-            sessionKey=format(random.getrandbits(256), '0256b')
-            break
-        else:
-            print("Wrong key size")
-    return sessionKey
 
 
 #fonction principale du programme
