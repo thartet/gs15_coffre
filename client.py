@@ -6,16 +6,37 @@ from Hmac import *
 from rsa import *
 from sha256 import *
 from zpk import *
+from maths import *
+import json
 
 #fonction permettant de créer un compte côté client
 #à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
-def clientCreateAccount(clientSock):
+def clientCreateAccount(key, clientSock):
     username = input("Entrez votre nom d'utilisateur: ")
-    clientSock.send(username.encode())
+    sendMessage(key, username, clientSock)
     password = input("Entrez votre mot de passe: ")
-    clientSock.send(password.encode())
-    receivedData = clientSock.recv(8192)
-    print(receivedData.decode())
+    prkZpk = SHA3_256(password.encode()).hexdigest()
+    sendMessage(key, prkZpk, clientSock)
+    p = random_prime(256)
+    pukZpk, alpha = generate_keys(p, int(prkZpk, 16))
+    sendMessage(key, str(pukZpk), clientSock)
+    sendMessage(key, str(alpha), clientSock)
+    pukRsa, prkRsa = RSA()
+    sendMessage(key, str(pukRsa), clientSock)
+    userData= {}
+    userData['username'] = username
+    userData['password'] = password
+    userData['prkZpk'] = int(prkZpk, 16)
+    userData['pukZpk'] = pukZpk
+    userData['alpha'] = alpha
+    userData['prkRsa'] = prkRsa
+    userData['pukRsa'] = pukRsa
+    userData['alpha'] = alpha
+    userData = json.dumps(userData, indent=4)
+    f = open("userData.json", "w")
+    f.write(userData)
+
+
 
 #fonction permettant de se connecter à un compte côté client
 #à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
@@ -58,6 +79,7 @@ def clientMode(args):
     recievedData = clientSock.recv(8192)
     serverPuk = int(recievedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
+    #fileTransfer(clientSk, clientSock)
     ans=True
     while ans:
         print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
@@ -69,7 +91,7 @@ def clientMode(args):
         ans=input("Votre choix: ")
         if ans=="1":
             clientSock.send("1".encode())
-            clientCreateAccount(clientSock)
+            clientCreateAccount(clientSk, clientSock)
         elif ans=="2":
             clientSock.send("2".encode())
             clientLogin(clientSock)

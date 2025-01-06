@@ -1,17 +1,27 @@
 import socket
 from DiffieHelman import *
 from Cobra import *
+import json
 
 #fonction permettant de créer un compte côté serveur
 #à faire: modifier la fonction pour vérifier que deux compte n'ont pas le même nom d'utilisateur
-def create_account(connecSock):
-    receivedData = connecSock.recv(8192)
-    username = receivedData.decode()
-    receivedData = connecSock.recv(8192)
-    password = receivedData.decode()
-    with open('users.txt', 'a') as file:
-        file.write(username + ' ' + password + '\n')
-    connecSock.send("Votre compte a été créé avec succès!".encode())
+def create_account(key, connecSock):
+    username = reciveMessage(key, connecSock)
+    password = reciveMessage(key, connecSock)
+    pukZpk = reciveMessage(key, connecSock)
+    alpha = reciveMessage(key, connecSock)
+    pukRsa = reciveMessage(key, connecSock)
+    userData = {}
+    userData['username'] = username
+    userData['password'] = password
+    userData['pukZpk'] = pukZpk
+    userData['alpha'] = alpha
+    userData['pukRsa'] = pukRsa
+    userData['fileList'] = []
+    userData = json.dumps(userData, indent=4)
+    f = open("serverData.json", "a")
+    f.write(userData)
+
 
 #fonction permettant de se connecter à un compte côté serveur
 #à faire: modifier la fonction pour vérifier différement les mots de passe, exemple comparaison de hash
@@ -74,6 +84,6 @@ def serverMode(args):
         print("{} octet reçu de {}:{}".format(len(recievedData), addr, connecSock.getsockname()[1]))
         print("Serveur client:", connecSock.getpeername(), "\nAddresse serveur:", connecSock.getsockname())
         if recievedData.decode() == "1":
-            create_account(connecSock)
+            create_account(serverSk, connecSock)
         elif recievedData.decode() == "2":
             login(connecSock)
