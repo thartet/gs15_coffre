@@ -16,76 +16,83 @@ def RSA():
     return ((e, n), (d, n))
 
 
-def encrypt(m, pk):
+def text_to_int(text):
     """
-    Encrypt a message
-    m : message to encrypt (string)
-    pk : public key
-    returns the encrypted message (as a number)
+    Convert a UTF-8 text into an int with UTF-8
     """
-    m_int = int.from_bytes(m.encode(), 'big')
-    return pow(m_int, pk[0], pk[1])
+    return int.from_bytes(text.encode('utf-8'), byteorder='big')
 
-
-def decrypt(c, sk):
+def split_text_into_blocks(text, block_size):
     """
-    Decrypt a message
-    c : encrypted message (number)
-    sk : private key
-    returns the decrypted message (as a string)
+    Cut a text in blocks of given size (in bytes).
+    Each block need to be smaller than 'n' (RSA module)
     """
-    m_int = pow(c, sk[0], sk[1])
-    m = m_int.to_bytes((m_int.bit_length() + 7) // 8, 'big').decode()
-    return m
+    blocks = [text[i:i + block_size] for i in range(0, len(text), block_size)]
+    return blocks
 
-
-def encrypt_file(file, pk):
+def encrypt_block(block, pk):
     """
-    Encrypt a file
-    file : file to encrypt
-    pk : public key
-    returns the encrypted file content
+    Encrypt a single block of text.
     """
-    with open(file, "r") as f:
-        content = f.read()
-    encrypted_content = encrypt(content, pk)
-    
-    with open("encrypted_" + file, "w") as f:
-        f.write(str(encrypted_content))
-    
-    return encrypted_content
+    m = text_to_int(block)
+    return pow(m, pk[0], pk[1])
 
-
-def decrypt_file(file, sk):
+def encrypt_text(text, pk, block_size=128):
     """
-    Decrypt a file
-    file : file to decrypt
-    sk : private key
-    returns the decrypted file content
+    Encrypt a text cutting it in blocks. Because if the text converted in int is bigger than 'n' the expansion
+    cannot work properly.
     """
-    with open(file, "r") as f:
-        content = f.read()
-    encrypted_content = int(content)
-    decrypted_content = decrypt(encrypted_content, sk)
-    
-    with open("decrypted_" + file, "w") as f:
-        f.write(decrypted_content)
+    blocks = split_text_into_blocks(text, block_size)
+    encrypted_blocks = [encrypt_block(block, pk) for block in blocks]
+    return encrypted_blocks
 
-    return decrypted_content
+def int_to_text(integer):
+    """
+    Convert int to text (UTF-8).
+    integer is supposed to be the result of text_to_int
+    """
+    byte_length = (integer.bit_length() + 7) // 8  # Taille en octets
+    return integer.to_bytes(byte_length, byteorder='big').decode('utf-8', errors='ignore')
 
+def read_file(file_path):
+    """
+    Read a file and return content as string
+    """
+    with open(file_path, 'r') as file:
+        return file.read()
+
+def decrypt_block(c, sk):
+    """
+    Decrypt a single block of crypted text
+    """
+    m = pow(c, sk[0], sk[1])
+    return int_to_text(m)
+
+def decrypt_text(encrypted_blocks, sk, block_size=128):
+    """
+    Decrypt text by combining all blocks together
+    """
+    decrypted_blocks = [decrypt_block(c, sk) for c in encrypted_blocks]
+    return ''.join(decrypted_blocks)
 
 def main():
+    file_path = 'test.txt' 
+    text = read_file(file_path)
     pk, sk = RSA()
-    
-    # Encrypt and decrypt a file
-    print("Encrypting file...")
-    encrypted_content = encrypt_file("test.txt", pk)
-    print(f"Encrypted content written to: encrypted_test.txt")
-    print("\nDecrypting file...")
-    decrypted_content = decrypt_file("encrypted_test.txt", sk)
-    print(f"Decrypted content written to: decrypted_test.txt")
-    print("Decrypted content:")
-    print(decrypted_content)
+
+    encrypted_message = encrypt_text(text, pk)
+
+    print("Texte original :")
+    print(text)
+    print("\nMessage chiffré :")
+    print(encrypted_message)
+
+    # Déchiffrement du message
+    decrypted_message = decrypt_text(encrypted_message, sk)
+
+    print("\nMessage déchiffré :")
+    print(decrypted_message)
+
 
 if __name__ == "__main__":
     main()
