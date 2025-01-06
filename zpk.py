@@ -62,7 +62,9 @@ def main():
     pub, alpha = generate_keys(p, prk)
     print(f"Generated public key: {pub}")
     print(f"Generated private key: {prk}")
+
     schnorr = Schnorr(pub, prk, p, alpha)
+    
     m, M = schnorr.nicolas_choosing_m()
     r = schnorr.remi_choosing_r()
     proof = schnorr.nicolas_proving(m, r)

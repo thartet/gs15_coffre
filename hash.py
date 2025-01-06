@@ -1,3 +1,4 @@
+# Code taken from https://github.com/ctz/keccak - simplified
 from math import log
 from operator import xor
 from copy import deepcopy
