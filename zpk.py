@@ -63,7 +63,7 @@ def main():
     print(f"Generated public key: {pub}")
     print(f"Generated private key: {s}")
 
-    schnorr = Schnorr(pub, s+2, p, alpha)
+    schnorr = Schnorr(pub, s, p, alpha)
 
     m, M = schnorr.nicolas_choosing_m()
     r = schnorr.remi_choosing_r()
