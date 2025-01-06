@@ -15,6 +15,17 @@ def RSA():
 
     return ((e, n), (d, n))
 
+def encrypt(m, pk):
+    """
+    Encrypt a message with a public key
+    """
+    return pow(m, pk[0], pk[1])
+
+def decrypt(c, sk):
+    """
+    Decrypt a message with a private key
+    """
+    return pow(c, sk[0], sk[1])
 
 def text_to_int(text):
     """

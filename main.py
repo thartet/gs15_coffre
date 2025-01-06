@@ -43,7 +43,6 @@ def testArgs(args):
         args.serverMode = False
 
 
-
 #fonction principale du programme
 def main():
     args = initializeParser()
