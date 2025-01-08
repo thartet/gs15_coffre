@@ -142,7 +142,7 @@ def SBitsliceInverse(box, words):
     the corresponding positions in the returned words."""
 
     result = ["", "", "", ""]
-    for i in range(32): # ideally in parallel
+    for i in range(32): 
         quad = SInverse(
             box, words[0][i] + words[1][i] + words[2][i] + words[3][i])
         for j in range(4):
@@ -282,7 +282,6 @@ def sendMessage(key, message, socket):
     messageBlocks = textParser(message)
     messageHmac = hmac(key, message)
     print("HMAC du message: ", messageHmac)
-    print(len(messageBlocks))
     cipherLen = encrypt(str(len(messageBlocks)), key)
     socket.send(str(cipherLen).encode())
     cipherText = []
@@ -296,7 +295,6 @@ def sendMessage(key, message, socket):
 
 def reciveMessage(key, socket):
     recivedData = socket.recv(128)
-    print(recivedData)
     plainNbBlocks = decrypt(recivedData.decode(), key)
     nbBlocks = int(plainNbBlocks)
     message = ""

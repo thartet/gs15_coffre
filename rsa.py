@@ -15,13 +15,13 @@ def RSA():
 
     return ((e, n), (d, n))
 
-def encrypt(m, pk):
+def encryptRsa(m, pk):
     """
     Encrypt a message with a public key
     """
     return pow(m, pk[0], pk[1])
 
-def decrypt(c, sk):
+def decryptRsa(c, sk):
     """
     Decrypt a message with a private key
     """

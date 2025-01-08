@@ -42,7 +42,7 @@ class SimpleCA:
         returns the signature
         """
         data_int = int.from_bytes(data_hash, byteorder='big')
-        signature = rsa.encrypt(data_int, self.ca_private_key)
+        signature = rsa.encryptRsa(data_int, self.ca_private_key)
         print(f"Signature created: {signature}")
         return signature
     
@@ -71,7 +71,7 @@ class SimpleCA:
         returns if the signature is valid
         """
         print(f"Verifying signature with data hash {data_hash}")
-        decrypted_signature = rsa.decrypt(signature, ca_public_key)
+        decrypted_signature = rsa.decryptRsa(signature, ca_public_key)
         print(f"Decrypted signature: {decrypted_signature}")
         return decrypted_signature == data_hash
 

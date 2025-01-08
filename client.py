@@ -40,13 +40,25 @@ def clientCreateAccount(key, clientSock):
 
 #fonction permettant de se connecter à un compte côté client
 #à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
-def clientLogin(clientSock):
-    username = input("Entrez votre nom d'utilisateur: ")
-    clientSock.send(username.encode())
-    password = input("Entrez votre mot de passe: ")
-    clientSock.send(password.encode())
-    receivedData = clientSock.recv(8192)
-    print(receivedData.decode())
+def clientLogin(key, clientSock):
+    isConnected = False
+    certificateToVerify = reciveMessage(key, clientSock)
+    sendMessage(key, certificateToVerify, clientSock)
+    isLegit = reciveMessage(key, clientSock)
+    if isLegit == "True":
+        username = input("Rentrez votre identifiant: ")
+        sendMessage(key, username, clientSock)
+        motDePasse = input("Rentrez votre mot de passe: ")
+        motDePasse = SHA3_256(motDePasse.encode()).hexdigest()
+        sendMessage(key, motDePasse, clientSock)
+        loginMessage = reciveMessage(key, clientSock)
+        print(loginMessage)
+        if loginMessage == "Connection accepte":
+            isConnected = True
+            return isConnected
+
+
+    
 
 
 def fileTransfer(key, socket):
@@ -79,7 +91,6 @@ def clientMode(args):
     recievedData = clientSock.recv(8192)
     serverPuk = int(recievedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
-    #fileTransfer(clientSk, clientSock)
     ans=True
     while ans:
         print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
@@ -88,14 +99,22 @@ def clientMode(args):
         print("3. Tester les fonction de chiffrements")
         print("4. Quitter")
 
-        ans=input("Votre choix: ")
-        if ans=="1":
-            clientSock.send("1".encode())
+        choice=input("Votre choix: ")
+        if choice=="1":
+            sendMessage(clientSk, "1", clientSock)
             clientCreateAccount(clientSk, clientSock)
-        elif ans=="2":
-            clientSock.send("2".encode())
-            clientLogin(clientSock)
-        elif ans == "3":
+        elif choice=="2":
+            sendMessage(clientSk, "2", clientSock)
+            isConnected = clientLogin(clientSk, clientSock)
+            if isConnected:
+                print("Que voulez-vous faire?")
+                print("1. Déposer un fichier")
+                print("2. Consulter un fihier")
+                ans2=input("Votre choix: ")
+                if ans2 == "1":
+                    sendMessage(clientSk, "1", clientSock)
+                    fileTransfer(clientSk, clientSock)
+        elif choice == "3":
             print("Quel fonction tester?")
             print("1. Cobra")
             print("2. Diffie-Helman")
@@ -119,7 +138,7 @@ def clientMode(args):
                 testSha256()
             elif ans2 == "7":
                 testZpk() 
-        elif ans=="4":
+        elif choice=="4":
             clientSock.close()
             print("\nAu revoir!")
             ans = False
