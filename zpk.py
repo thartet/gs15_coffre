@@ -72,6 +72,7 @@ def main():
     print(f"Proof valid: {valid}")
 
 def testZpk():
-    main()
-if __name__ == "__main__":
+    """
+    Test the ZPK algorithm
+    """
     main()

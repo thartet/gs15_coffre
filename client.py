@@ -9,21 +9,27 @@ from zpk import *
 from maths import *
 import json
 
-#fonction permettant de créer un compte côté client
-#à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
 def clientCreateAccount(key, clientSock):
+    """
+    Function to create an account on the client side
+    key: the secret key used for encryption
+    clientSock: the client socket
+    """
     username = input("Entrez votre nom d'utilisateur: ")
     sendMessage(key, username, clientSock)
     password = input("Entrez votre mot de passe: ")
     prkZpk = SHA3_256(password.encode()).hexdigest()
     sendMessage(key, prkZpk, clientSock)
+
     p = random_prime(256)
     pukZpk, alpha = generate_keys(p, int(prkZpk, 16))
     sendMessage(key, str(pukZpk), clientSock)
     sendMessage(key, str(alpha), clientSock)
+
     pukRsa, prkRsa = RSA()
     sendMessage(key, str(pukRsa), clientSock)
-    userData= {}
+
+    userData = {}
     userData['username'] = username
     userData['password'] = password
     userData['prkZpk'] = int(prkZpk, 16)
@@ -33,87 +39,125 @@ def clientCreateAccount(key, clientSock):
     userData['pukRsa'] = pukRsa
     userData['alpha'] = alpha
     userData = json.dumps(userData, indent=4)
+
     f = open("userData.json", "w")
     f.write(userData)
+    print("\nYour account has been created successfully!")
 
 
-
-#fonction permettant de se connecter à un compte côté client
-#à faire: trouver un moyen de transmettre le mot de passe de manière non-clairs
 def clientLogin(key, clientSock):
+    """
+    Function to login on the client side
+    key: the secret key used for encryption
+    clientSock: the client socket
+    """
     isConnected = False
-    certificateToVerify = reciveMessage(key, clientSock)
+    certificateToVerify = receiveMessage(key, clientSock)
     sendMessage(key, certificateToVerify, clientSock)
-    isLegit = reciveMessage(key, clientSock)
+    isLegit = receiveMessage(key, clientSock)
+
     if isLegit == "True":
-        username = input("Rentrez votre identifiant: ")
+        username = input("Enter your username: ")
         sendMessage(key, username, clientSock)
-        motDePasse = input("Rentrez votre mot de passe: ")
+
+        motDePasse = input("Enter your password: ")
         motDePasse = SHA3_256(motDePasse.encode()).hexdigest()
         sendMessage(key, motDePasse, clientSock)
-        loginMessage = reciveMessage(key, clientSock)
+
+        loginMessage = receiveMessage(key, clientSock)
         print(loginMessage)
-        if loginMessage == "Connection accepte":
+
+        if loginMessage == "Connexion successfull!":
             isConnected = True
             return isConnected  
 
 
 def fileTransfer(key, socket):
-    filePath = input("Entrez le chemin absolu du fichier: ")
+    """
+    Function to transfer a file
+    key: the secret key used for encryption
+    socket: the client socket
+    """
+    filePath = input("Enter the path to the file: ")
     f = open(filePath, "r")
     lines = f.readlines()
     cipherData = ""
+
     for i in range(len(lines)):
         textBlocks = textParser(lines[i])
         for j in range(len(textBlocks)):
             cipherData += encrypt(textBlocks[j], key)
+
     print(cipherData)
     print(len(cipherData))
+
     fileHmac = hmac(key, cipherData)
-    print("HMAC du fichier: ", fileHmac)
+    print("HMAC of the file ", fileHmac)
+
     socket.send(str(len(cipherData)).encode())
     socket.send(fileHmac.encode())
     socket.send(cipherData.encode())
-    newFileName = input("Sauvegarder le fichier comme: ")
+
+    newFileName = input("Save file as : ")
     sendMessage(key, newFileName, socket)
 
-#fonction du programme pour le faire fonctionner en mode Client
-#à faire: rajouter des options
+
 def clientMode(args):
+    """
+    Function to run the client mode
+    args: the arguments passed to the program
+    """
     clientSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socketAddr= (args.ipAddress,args.port)
     clientSock.connect(socketAddr)
+
     clientPuk, clientPrk = genPublicAndPrivateKey(clientSock.getsockname()[0])
     clientSock.send(str(clientPuk).encode())
-    recievedData = clientSock.recv(8192)
-    serverPuk = int(recievedData.decode())
+    receivedData = clientSock.recv(8192)
+    serverPuk = int(receivedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
-    ans=True
-    while ans:
-        print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
-        print("1. Créer votre compte")
-        print("2. Vous connecter")
-        print("3. Tester les fonction de chiffrements")
-        print("4. Générer une paire de clés RSA")
-        print("5. Quitter")
 
-        choice=input("Votre choix: ")
-        if choice=="1":
+    ans = True
+    while ans:
+        print("\nHello Master T! What would you like to do today?")
+        print("1. Create your account")
+        print("2. Log in")
+        print("3. Test encryption functions")
+        print("4. Generate an RSA key pair")
+        print("5. Quit")
+
+        choice = input("Your choice: ")
+        if choice == "1":
             sendMessage(clientSk, "1", clientSock)
             clientCreateAccount(clientSk, clientSock)
-        elif choice=="2":
+
+        elif choice == "2":
             sendMessage(clientSk, "2", clientSock)
             isConnected = clientLogin(clientSk, clientSock)
+
             if isConnected:
-                print("Que voulez-vous faire?")
-                print("1. Déposer un fichier")
-                print("2. Consulter un fihier")
-                ans2=input("Votre choix: ")
+                print("What would you like to do?")
+                print("1. Transfer a file")
+                print("2. View your files")
+                print("3. Disconnect")
+
+                ans2 = input("Your choice: ")
+
                 if ans2 == "1":
                     sendMessage(clientSk, "1", clientSock)
                     fileTransfer(clientSk, clientSock)
+                
+                elif ans2 == "2":
+                    print("View files")
+                    # To be implemented
+
+                elif ans2 == "3":
+                    print("Disconnecting...")
+                    sendMessage(clientSk, "3", clientSock)
+                    clientSock.close()
+
         elif choice == "3":
-            print("Quel fonction tester?")
+            print("Which encryption function would you like to test?")
             print("1. Cobra")
             print("2. Diffie-Helman")
             print("3. SHA3-256")
@@ -121,26 +165,37 @@ def clientMode(args):
             print("5. RSA")
             print("6. SHA-256")
             print("7. ZPK")
-            ans2=input("Votre choix: ")
+
+            ans2=input("Your choice: ")
+
             if ans2 == "1":
                 cobraTest(clientSk)
+
             elif ans2 == "2":
                 testDF()
+
             elif ans2 == "3":
                 testSha3()
+
             elif ans2 == "4":
                 testHmac(clientSk)
+
             elif ans2 == "5":
                 testRSA()
+
             elif ans2 == "6":
                 testSha256()
+
             elif ans2 == "7":
                 testZpk() 
-        elif choice=="4":
+
+        elif choice == "4":
             generate_keyfiles()
-        elif choice=="5":
+
+        elif choice == "5":
             clientSock.close()
-            print("\nAu revoir!")
+            print("\nSee you soon Master!")
             ans = False
+
         else:
-            print("\nChoix invalide, veuillez réessayer.")
+            print("\nInvalid choice. Please try again.")

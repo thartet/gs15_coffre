@@ -428,6 +428,9 @@ SHA3_256 = SHA3Hash.preset(1088, 512, 256)
     
 
 def testSha3():
+    """
+    Test the SHA3 implementation.
+    """
     testText = input("Enter text to hash: ").encode()
     hashedText = SHA3_256(testText)
     print(f"Hashed text: {hashedText.hexdigest()}")

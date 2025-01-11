@@ -78,6 +78,9 @@ def sha256(message):
     return b''.join(x.to_bytes(4, 'big') for x in H)
 
 def testSha256():
+    """
+    Test the SHA-256 function
+    """
     testString = input("Enter text to hash: ").encode()
     print("Text to hash: ", testString)
     testSha256 = sha256(testString)
