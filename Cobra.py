@@ -1,4 +1,6 @@
 import random
+import socket
+from Hmac import *
 from helpFunction import * 
 from hash import *
 #représentation du nombre d'or sur 32 bit, et r le nombre de permutation
@@ -115,23 +117,6 @@ def SBoxTransform (w):
         KHat.append(applyPermutation(IPTable,K[i]))
     return KHat, K
 
-#Cette fonction permet de générer une clé de session aléatoire dans un bitarray
-def genSessionKey():
-    sessionKey=''
-    while True:
-        keySize=int(input("Quelle taille de clé voulez-vous générer? (128, 192 ou 256): "))
-        if keySize == 128:
-            sessionKey=format(random.getrandbits(128), '0128b')
-            break
-        elif keySize == 192:
-            sessionKey=format(random.getrandbits(192), '0192b')
-            break
-        elif keySize == 256:
-            sessionKey=format(random.getrandbits(256), '0256b')
-            break
-        else:
-            print("Wrong key size")
-    return sessionKey
 
 def SBitslice(box, words):
     """Prends 'words', une liste de 4 bitstrings de 32bits, word le moins significatif en premier. 
@@ -157,7 +142,7 @@ def SBitsliceInverse(box, words):
     the corresponding positions in the returned words."""
 
     result = ["", "", "", ""]
-    for i in range(32): # ideally in parallel
+    for i in range(32): 
         quad = SInverse(
             box, words[0][i] + words[1][i] + words[2][i] + words[3][i])
         for j in range(4):
@@ -271,10 +256,7 @@ def invRound(i, Biplus1, Ki):
     return Bi    
 
 def encrypt(plainText, key):
-    print("Text: ", plainText)
     bitText = toBitstring(plainText)
-    print("bitsting Text:", bitText)
-    print("Key: ", key)
     genKey = initializeKey(key)
     w = keyExpansion (genKey)
     KHat, K = SBoxTransform(w)
@@ -282,12 +264,9 @@ def encrypt(plainText, key):
     for i in range(r):
         B = round(i, B, KHat[i])
     cipherText = applyPermutation(FPTable, B)
-    print("cipher Text: ", cipherText)
     return cipherText
 
 def decrypt(cipherText, key):
-    print("Cipher text: ", cipherText)
-    print("key: ", key)
     genKey=initializeKey(key)
     w = keyExpansion (genKey)
     KHat, K = SBoxTransform(w)
@@ -296,4 +275,48 @@ def decrypt(cipherText, key):
         B = invRound(i, B, KHat[i])
     plainText = applyPermutation(FPTable, B)
     plainText = toText(plainText)
-    print("plain text: ", plainText)
+    return plainText
+
+def sendMessage(key, message, socket):
+    print(message)
+    messageBlocks = textParser(message)
+    messageHmac = hmac(key, message)
+    print("HMAC du message: ", messageHmac)
+    cipherLen = encrypt(str(len(messageBlocks)), key)
+    socket.send(str(cipherLen).encode())
+    cipherText = []
+    for i in range(len(messageBlocks)):
+        cipherBlock = encrypt(messageBlocks[i], key)
+        cipherText.append(cipherBlock)
+        socket.send(str(cipherBlock).encode())
+    print("Texte chiffré: ", cipherText)
+    socket.send(messageHmac.encode())
+    
+
+def reciveMessage(key, socket):
+    recivedData = socket.recv(128)
+    plainNbBlocks = decrypt(recivedData.decode(), key)
+    nbBlocks = int(plainNbBlocks)
+    message = ""
+    for i in range(nbBlocks):
+        recivedData = socket.recv(128)
+        plainText = decrypt(recivedData.decode(), key)
+        message += plainText
+    recivedData = socket.recv(64)
+    recivedHmac = recivedData.decode()
+    messageHmac = hmac(key, message)
+    print(messageHmac)
+    if messageHmac == recivedHmac :
+        print("Hmac vérifié")
+    else:
+        print("Attention, Hmac différent")
+    return message
+
+def cobraTest(key):
+    testString = input("Entrez le texte à chiffrer: ")
+    print("Texte à chiffrer: ", testString)
+    cipherText = encrypt(testString, key)
+    print("Texte chiffré: ", cipherText)
+    plainText = decrypt(cipherText, key)
+    print("Texte déchiffré: ", plainText)
+
