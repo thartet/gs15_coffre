@@ -55,10 +55,7 @@ def clientLogin(key, clientSock):
         print(loginMessage)
         if loginMessage == "Connection accepte":
             isConnected = True
-            return isConnected
-
-
-    
+            return isConnected  
 
 
 def fileTransfer(key, socket):
@@ -97,7 +94,8 @@ def clientMode(args):
         print("1. Créer votre compte")
         print("2. Vous connecter")
         print("3. Tester les fonction de chiffrements")
-        print("4. Quitter")
+        print("4. Générer une paire de clés RSA")
+        print("5. Quitter")
 
         choice=input("Votre choix: ")
         if choice=="1":
@@ -118,10 +116,10 @@ def clientMode(args):
             print("Quel fonction tester?")
             print("1. Cobra")
             print("2. Diffie-Helman")
-            print("3. sha3")
-            print("4. hmac")
+            print("3. SHA3-256")
+            print("4. HMAC SHA-256")
             print("5. RSA")
-            print("6. sha-256")
+            print("6. SHA-256")
             print("7. ZPK")
             ans2=input("Votre choix: ")
             if ans2 == "1":
@@ -139,6 +137,8 @@ def clientMode(args):
             elif ans2 == "7":
                 testZpk() 
         elif choice=="4":
+            generate_keyfiles()
+        elif choice=="5":
             clientSock.close()
             print("\nAu revoir!")
             ans = False

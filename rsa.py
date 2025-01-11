@@ -1,4 +1,6 @@
 import maths
+import os
+import base64
 
 def RSA():
     """
@@ -106,6 +108,28 @@ def main():
 
 def testRSA():
     main()
+
+def generate_keyfiles():
+    """
+    Generate RSA public/private key pair.
+    """
+    public_key, private_key = RSA()
+    os.makedirs('.keys_client', exist_ok=True)
+
+    pub_key_b64 = base64.b64encode(f"{public_key[0]}\n{public_key[1]}".encode()).decode()
+    with open('.keys_client/rsa.pub', 'w') as pub_file:
+        pub_file.write("ssh-rsa ")
+        for i in range(0, len(pub_key_b64), 64):
+            pub_file.write(pub_key_b64[i:i+64] + '\n')
+
+    priv_key_b64 = base64.b64encode(f"{private_key[0]}\n{private_key[1]}".encode()).decode()
+    with open('.keys_client/rsa', 'w') as priv_file:
+        priv_file.write("-----BEGIN RSA PRIVATE KEY-----\n")
+        for i in range(0, len(priv_key_b64), 64):
+            priv_file.write(priv_key_b64[i:i+64] + '\n')
+        priv_file.write("-----END RSA PRIVATE KEY-----\n")
+    
+    print("Keys generated. They can be found in the .keys_client directory.")
 
 if __name__ == "__main__":
     main()

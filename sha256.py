@@ -77,12 +77,8 @@ def sha256(message):
     # Produce the final hash value (big-endian):
     return b''.join(x.to_bytes(4, 'big') for x in H)
 
-def main():
-    print(sha256(b'hello').hex())
-
-if __name__ == '__main__':
-    main()
-
 def testSha256():
-    print("Texte à hacher: hello")
-    main()
+    testString = input("Enter text to hash: ").encode()
+    print("Text to hash: ", testString)
+    testSha256 = sha256(testString)
+    print("Generated SHA-256: ", testSha256.hex())

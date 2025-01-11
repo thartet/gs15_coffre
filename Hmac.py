@@ -14,8 +14,8 @@ def hmac (key, message):
     return hmac
 
 def testHmac(key):
-    testString= "test"
-    print("Texte à hacher: ", testString)
+    testString = input("Enter the string to hash: ")
+    print("Text to hash: ", testString)
     testHmac = hmac(key, testString)
-    print("Hmac généré :", testHmac)
+    print("Generated Hmac :", testHmac)
 

@@ -425,13 +425,9 @@ Keccak256 = KeccakHash.preset(1088, 512, 256)
 
 # SHA3 parameter presets
 SHA3_256 = SHA3Hash.preset(1088, 512, 256)
-
-def main():
-    print(SHA3_256(b"hello").hexdigest())
-
-if __name__ == "__main__":
-    main()
+    
 
 def testSha3():
-    print("Texte à hacher: hello")
-    main()
+    testText = input("Enter text to hash: ").encode()
+    hashedText = SHA3_256(testText)
+    print(f"Hashed text: {hashedText.hexdigest()}")

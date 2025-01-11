@@ -313,7 +313,7 @@ def reciveMessage(key, socket):
     return message
 
 def cobraTest(key):
-    testString = "test"
+    testString = input("Entrez le texte à chiffrer: ")
     print("Texte à chiffrer: ", testString)
     cipherText = encrypt(testString, key)
     print("Texte chiffré: ", cipherText)
