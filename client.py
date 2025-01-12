@@ -107,7 +107,7 @@ def retrieveFile(key, socket, userData):
         filenameFromServer = receiveMessage(key, socket)
         fileList.append(filenameFromServer)
     print("Acessible files: "+ str(fileList))
-    filename = input("Enter filename to get form the list: ")
+    filename = input("Enter filename to get from the list: ")
     if filename in fileList:
         sendMessage(key, filename, socket)
         fileLen = int(socket.recv(32).decode())
@@ -125,9 +125,9 @@ def retrieveFile(key, socket, userData):
         fileHmac = hmac(key, receivedData)
         print(fileHmac)
         if fileHmac == hmacToVerify :
-            print("Hmac vérifié")
+            print("Hmac verified")
         else:
-            print("Attention, Hmac différent")
+            print("Warning, different Hmac")
         plainText = plainText.replace("[", "")
         plainText = plainText.replace("]", "")
         blocksForFile = plainText.split(", ")
@@ -139,7 +139,7 @@ def retrieveFile(key, socket, userData):
         f = open(newFileName, "w")
         f.write(toWrite)
     else:
-        print("filename not in list")
+        print("Filename is not in the list")
     
     
 
@@ -154,47 +154,60 @@ def clientMode(args):
 
     clientPuk, clientPrk = genPublicAndPrivateKey(clientSock.getsockname()[0])
     clientSock.send(str(clientPuk).encode())
-    recievedData = clientSock.recv(8192)
-    serverPuk = int(recievedData.decode())
+    receivedData = clientSock.recv(8192)
+    serverPuk = int(receivedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
     ans=True
     while ans:
-        print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
-        print("1. Créer votre compte")
-        print("2. Vous connecter")
-        print("3. Tester les fonction de chiffrements")
-        print("4. Générer une paire de clés RSA")
-        print("5. Quitter")
+        print("\nHello Master T! What would you like to do today?")
+        print("1. Create your account")
+        print("2. Log in")
+        print("3. Test encryption functions")
+        print("4. Generate an RSA key pair")
+        print("5. Quit")
 
-        choice=input("Votre choix: ")
-        if choice=="1":
+        choice=input("Your choice: ")
+
+        if choice == "1":
             sendMessage(clientSk, "1", clientSock)
             clientCreateAccount(clientSk, clientSock)
             clientSock.close()
             ans = False
-        elif choice=="2":
+
+        elif choice == "2":
             sendMessage(clientSk, "2", clientSock)
             isConnected = clientLogin(clientSk, clientSock)
+
             if isConnected:
                 with open('userData.json', 'r') as file:
                     userData = json.load(file)
                 print(userData['prkRsa'])
-                print("Que voulez-vous faire?")
-                print("1. Déposer un fichier")
-                print("2. Consulter un fihier")
-                ans2=input("Votre choix: ")
+                print("What would you like to do?")
+                print("1. Transfer a file")
+                print("2. Retrieve a file")
+                print("3. Quit")
+
+                ans2 = input("Your choice: ")
+
                 if ans2 == "1":
                     sendMessage(clientSk, "1", clientSock)
                     fileTransfer(clientSk, clientSock)
                     clientSock.close()
-                    ans = False
-                if ans2 == "2":
+                    ans2 = False
+
+                elif ans2 == "2":
                     sendMessage(clientSk, "2", clientSock)
                     retrieveFile(clientSk, clientSock, userData)
                     clientSock.close()
-                    ans = False
+                    ans2 = False
+
+                elif ans2 == "3":
+                    clientSock.close()
+                    print("\nGoodbye!")
+                    ans2 = False
+
         elif choice == "3":
-            print("Quel fonction tester?")
+            print("Which cryptographic function would you like to test?")
             print("1. Cobra")
             print("2. Diffie-Helman")
             print("3. SHA3-256")
@@ -202,28 +215,37 @@ def clientMode(args):
             print("5. RSA")
             print("6. SHA-256")
             print("7. ZPK")
-            ans2=input("Votre choix: ")
+
+            ans2 = input("Your choice: ")
+
             if ans2 == "1":
                 cobraTest(clientSk)
+
             elif ans2 == "2":
                 testDF()
+
             elif ans2 == "3":
                 testSha3()
+
             elif ans2 == "4":
                 testHmac(clientSk)
+
             elif ans2 == "5":
                 testRSA()
+
             elif ans2 == "6":
                 testSha256()
+
             elif ans2 == "7":
                 testZpk() 
-        elif choice=="4":
+
+        elif choice == "4":
             generate_keyfiles()
+
+        elif choice == "5":
             clientSock.close()
+            print("\nGoodbye!")
             ans = False
-        elif choice=="5":
-            clientSock.close()
-            print("\nAu revoir!")
-            ans = False
+
         else:
-            print("\nChoix invalide, veuillez réessayer.")
+            print("\nInvalid choice, please try again.")

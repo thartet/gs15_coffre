@@ -103,7 +103,7 @@ def main():
     """
     Main function to test the RSA algorithm
     """
-    file_path = 'lorem_ipsum.txt' 
+    file_path = 'test.txt' 
     text = read_file(file_path)
     pk, sk = RSA()
     encrypted_message = encrypt_text(text, pk)

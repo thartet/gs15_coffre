@@ -35,10 +35,12 @@ def create_account(key, connecSock):
         json.dump(listUser, jsonFile, indent=4)
 
 
-#fonction permettant de se connecter à un compte côté serveur
-#à faire: modifier la fonction pour vérifier différement les mots de passe, exemple comparaison de hash
-#à faire: faire retourner la fonction vers d'autre option pour l'utilisateur: consulter/déposer des fichiers
 def login(key, connecSock):
+    """
+    Function to login on the server side
+    key: the secret key used for encryption
+    connecSock: the connection socket
+    """
     with open('.keys_server/rsa.pub', 'rb') as pub_file:
         pub = pub_file.read()
         tab = pub.split(b'\n')
@@ -72,10 +74,10 @@ def login(key, connecSock):
             serverData = json.load(f)
         loginDict = getDictionary(username, serverData)
         if loginDict is False:
-            sendMessage(key, "Identifiant introuvable", connecSock)
+            sendMessage(key, "Incorrect login", connecSock)
             connecSock.close()
         elif motDePasse != loginDict['password']:
-            sendMessage(key, "Mot de passe Incorrect", connecSock)
+            sendMessage(key, "Incorrect password", connecSock)
             connecSock.close()
         else:
             sendMessage(key, "Connexion successfull!", connecSock)
@@ -83,36 +85,54 @@ def login(key, connecSock):
 
 
 def getDictionary(username, serverData):
+    """
+    Function to get the dictionary of a user
+    username: the username of the user
+    serverData: the data of the server
+    returns the dictionary of the user
+    """
     for dict in serverData:
         if username in dict['username'] :
             return dict
 
-def recieveFile(key, socket, userData):
+def receiveFile(key, socket, userData):
+    """
+    Function to receive a file
+    key : the secret key used for encryption
+    socket : the socket
+    userData : the data of the user
+    """
     fileLen = int(socket.recv(32).decode())
     print(fileLen)
     hmacToVerify = socket.recv(64).decode()
     print(hmacToVerify)
-    recieveData=""
-    while len(recieveData)<fileLen:
-        recieveData += socket.recv(8192).decode()
-    print(recieveData)
-    parsedData = blockParser(recieveData)
+    receiveData=""
+    while len(receiveData)<fileLen:
+        receiveData += socket.recv(8192).decode()
+    print(receiveData)
+    parsedData = blockParser(receiveData)
     plainText = ""
     for i in range(len(parsedData)):
         plainText += decrypt(parsedData[i], key)
-    fileHmac = hmac(key, recieveData)
+    fileHmac = hmac(key, receiveData)
     print(fileHmac)
     if fileHmac == hmacToVerify :
-        print("Hmac vérifié")
+        print("Hmac verified")
     else:
-        print("Attention, Hmac différent")
+        print("Warning, different Hmac")
     blocksForFile = rsa.encrypt_text(plainText, tuple(userData['pukRsa']))
     newFileName = receiveMessage(key, socket)
     f = open(newFileName, "w")
     f.write(str(blocksForFile))
     addFile(userData, newFileName)
 
+
 def addFile(userData, fileName):
+    """
+    Function to add a file to the user data
+    userData : the data of the user
+    fileName : the name of the file
+    """
     listUser = []
     userData['fileList'].append(fileName)
     with open("serverData.json") as file:
@@ -125,10 +145,14 @@ def addFile(userData, fileName):
     with open ("serverData.json", "w") as jsonFile:
         json.dump(listUser, jsonFile, indent=4)
 
-    
-
 
 def sendFile(key, socket, userData):
+    """
+    Function to send a file
+    key : the secret key used for encryption
+    socket : the socket
+    userData : the data of the user
+    """
     fileList = userData['fileList']
     sendMessage(key, str(len(fileList)), socket)
     for i in range(len(fileList)):
@@ -150,10 +174,11 @@ def sendFile(key, socket, userData):
     socket.send(cipherData.encode())
 
 
-
-#fonction décrivant le comportement du programme en mode serveur
-#à faire: ajouter d'autre options
 def serverMode(args):
+    """
+    Function to describe the behavior of the program in server mode
+    args: the arguments passed to the program
+    """
     serverSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     hostname = socket.gethostname()
     serverIP = socket.gethostbyname(hostname)
@@ -161,24 +186,29 @@ def serverMode(args):
     socketAddr = (serverIP, serverPort)
     serverSock.bind(socketAddr)
     serverSock.listen(1)
+    
     while True:
-        print("Le serveur {} attend une connection sur le port {}".format(serverIP, serverPort))
+        print("The server {} is waiting for a connexion on port {}".format(serverIP, serverPort))
         connecSock, addr = serverSock.accept()
         serverPuk, serverPrk = genPublicAndPrivateKey(serverSock.getsockname()[0])
-        recievedData = connecSock.recv(8192)
-        clientPuk = int(recievedData.decode())
+        receivedData = connecSock.recv(8192)
+        clientPuk = int(receivedData.decode())
         connecSock.send(str(serverPuk).encode())
         serverSk = genSecretKey(clientPuk, serverPrk)
         choice = receiveMessage(serverSk, connecSock)
-        print("{} octet reçu de {}:{}".format(len(recievedData), addr, connecSock.getsockname()[1]))
-        print("Serveur client:", connecSock.getpeername(), "\nAddresse serveur:", connecSock.getsockname())
+        print("{} bytes received from {}:{}".format(len(receivedData), addr, connecSock.getsockname()[1]))
+        print("Client connected from:", connecSock.getpeername(), "\nServer address:", connecSock.getsockname())
+        
         if choice == "1":
             create_account(serverSk, connecSock)
+
         elif choice == "2":
             userData = login(serverSk, connecSock)
             choice2 = receiveMessage(serverSk, connecSock)
+
             if choice2 == "1":
-                recieveFile(serverSk, connecSock, userData)
+                receiveFile(serverSk, connecSock, userData)
+                
             elif choice2 == "2":
                 sendFile(serverSk, connecSock, userData)
 
