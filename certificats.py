@@ -42,7 +42,7 @@ class SimpleCA:
         returns the signature
         """
         data_int = int.from_bytes(data_hash, byteorder='big')
-        signature = rsa.encrypt(data_int, self.ca_private_key)
+        signature = rsa.encryptRsa(data_int, self.ca_private_key)
         print(f"Signature created: {signature}")
         return signature
     
@@ -71,35 +71,6 @@ class SimpleCA:
         returns if the signature is valid
         """
         print(f"Verifying signature with data hash {data_hash}")
-        decrypted_signature = rsa.decrypt(signature, ca_public_key)
+        decrypted_signature = rsa.decryptRsa(signature, ca_public_key)
         print(f"Decrypted signature: {decrypted_signature}")
         return decrypted_signature == data_hash
-
-
-def generate_keys():
-    """
-    Generate RSA public/private key pair.
-    returns the public key and private key
-    """
-    public_key, private_key = rsa.RSA()
-    return public_key, private_key
-
-
-def main():
-    pub, priv = generate_keys()
-    ca_private_key = priv
-    ca_public_key = pub
-    ca = SimpleCA(ca_private_key)
-    
-    # Issuing a certificate
-    username = "Alice"
-    public_key = pub
-    certificate = ca.issue_certificate(username, public_key)
-    
-    # Verifying the certificate
-    print(f"Certificate: {certificate}")
-    print(ca.verify_certificate(certificate, ca_public_key))
-
-
-if __name__ == "__main__":
-    main()
