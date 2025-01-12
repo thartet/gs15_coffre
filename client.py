@@ -37,7 +37,6 @@ def clientCreateAccount(key, clientSock):
     userData['alpha'] = alpha
     userData['prkRsa'] = prkRsa
     userData['pukRsa'] = pukRsa
-    userData['alpha'] = alpha
     userData = json.dumps(userData, indent=4)
 
     f = open("userData.json", "w")
@@ -101,6 +100,48 @@ def fileTransfer(key, socket):
     newFileName = input("Save file as : ")
     sendMessage(key, newFileName, socket)
 
+def retrieveFile(key, socket, userData):
+    lenList = receiveMessage(key, socket)
+    fileList = []
+    for i in range(int(lenList)):
+        filenameFromServer = receiveMessage(key, socket)
+        fileList.append(filenameFromServer)
+    print("Acessible files: "+ str(fileList))
+    filename = input("Enter filename to get form the list: ")
+    if filename in fileList:
+        sendMessage(key, filename, socket)
+        fileLen = int(socket.recv(32).decode())
+        print(fileLen)
+        hmacToVerify = socket.recv(64).decode()
+        print(hmacToVerify)
+        receivedData = ""
+        while len(receivedData) < fileLen:
+            receivedData += socket.recv(8192).decode()
+        print(receivedData)
+        parsedData = blockParser(receivedData)
+        plainText = ""
+        for i in range(len(parsedData)):
+            plainText += decrypt(parsedData[i], key)
+        fileHmac = hmac(key, receivedData)
+        print(fileHmac)
+        if fileHmac == hmacToVerify :
+            print("Hmac vérifié")
+        else:
+            print("Attention, Hmac différent")
+        plainText = plainText.replace("[", "")
+        plainText = plainText.replace("]", "")
+        blocksForFile = plainText.split(", ")
+        for i in range(len(blocksForFile)):
+            blocksForFile[i] = int(blocksForFile[i])
+        toWrite = decrypt_text(blocksForFile, userData['prkRsa'])
+        print(toWrite)
+        newFileName = input("Save file as : ")
+        f = open(newFileName, "w")
+        f.write(toWrite)
+    else:
+        print("filename not in list")
+    
+    
 
 def clientMode(args):
     """
@@ -113,51 +154,47 @@ def clientMode(args):
 
     clientPuk, clientPrk = genPublicAndPrivateKey(clientSock.getsockname()[0])
     clientSock.send(str(clientPuk).encode())
-    receivedData = clientSock.recv(8192)
-    serverPuk = int(receivedData.decode())
+    recievedData = clientSock.recv(8192)
+    serverPuk = int(recievedData.decode())
     clientSk = genSecretKey(serverPuk, clientPrk)
-
-    ans = True
+    ans=True
     while ans:
-        print("\nHello Master T! What would you like to do today?")
-        print("1. Create your account")
-        print("2. Log in")
-        print("3. Test encryption functions")
-        print("4. Generate an RSA key pair")
-        print("5. Quit")
+        print("\nBonjour ô maître T ! Que souhaitez-vous faire aujourd'hui?")
+        print("1. Créer votre compte")
+        print("2. Vous connecter")
+        print("3. Tester les fonction de chiffrements")
+        print("4. Générer une paire de clés RSA")
+        print("5. Quitter")
 
-        choice = input("Your choice: ")
-        if choice == "1":
+        choice=input("Votre choix: ")
+        if choice=="1":
             sendMessage(clientSk, "1", clientSock)
             clientCreateAccount(clientSk, clientSock)
-
-        elif choice == "2":
+            clientSock.close()
+            ans = False
+        elif choice=="2":
             sendMessage(clientSk, "2", clientSock)
             isConnected = clientLogin(clientSk, clientSock)
-
             if isConnected:
-                print("What would you like to do?")
-                print("1. Transfer a file")
-                print("2. View your files")
-                print("3. Disconnect")
-
-                ans2 = input("Your choice: ")
-
+                with open('userData.json', 'r') as file:
+                    userData = json.load(file)
+                print(userData['prkRsa'])
+                print("Que voulez-vous faire?")
+                print("1. Déposer un fichier")
+                print("2. Consulter un fihier")
+                ans2=input("Votre choix: ")
                 if ans2 == "1":
                     sendMessage(clientSk, "1", clientSock)
                     fileTransfer(clientSk, clientSock)
-                
-                elif ans2 == "2":
-                    print("View files")
-                    # To be implemented
-
-                elif ans2 == "3":
-                    print("Disconnecting...")
-                    sendMessage(clientSk, "3", clientSock)
                     clientSock.close()
-
+                    ans = False
+                if ans2 == "2":
+                    sendMessage(clientSk, "2", clientSock)
+                    retrieveFile(clientSk, clientSock, userData)
+                    clientSock.close()
+                    ans = False
         elif choice == "3":
-            print("Which encryption function would you like to test?")
+            print("Quel fonction tester?")
             print("1. Cobra")
             print("2. Diffie-Helman")
             print("3. SHA3-256")
@@ -165,37 +202,28 @@ def clientMode(args):
             print("5. RSA")
             print("6. SHA-256")
             print("7. ZPK")
-
-            ans2=input("Your choice: ")
-
+            ans2=input("Votre choix: ")
             if ans2 == "1":
                 cobraTest(clientSk)
-
             elif ans2 == "2":
                 testDF()
-
             elif ans2 == "3":
                 testSha3()
-
             elif ans2 == "4":
                 testHmac(clientSk)
-
             elif ans2 == "5":
                 testRSA()
-
             elif ans2 == "6":
                 testSha256()
-
             elif ans2 == "7":
                 testZpk() 
-
-        elif choice == "4":
+        elif choice=="4":
             generate_keyfiles()
-
-        elif choice == "5":
             clientSock.close()
-            print("\nSee you soon Master!")
             ans = False
-
+        elif choice=="5":
+            clientSock.close()
+            print("\nAu revoir!")
+            ans = False
         else:
-            print("\nInvalid choice. Please try again.")
+            print("\nChoix invalide, veuillez réessayer.")
