@@ -110,7 +110,7 @@ def retrieveFile(key, socket, userData):
     filename = input("Enter filename to get from the list: ")
     if filename in fileList:
         sendMessage(key, filename, socket)
-        fileLen = int(socket.recv(32).decode())
+        fileLen = int(socket.recv(4).decode())
         print(fileLen)
         hmacToVerify = socket.recv(64).decode()
         print(hmacToVerify)

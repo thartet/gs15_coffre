@@ -102,8 +102,7 @@ def receiveFile(key, socket, userData):
     socket : the socket
     userData : the data of the user
     """
-    fileLen = int(socket.recv(32).decode())
-    print(fileLen)
+    fileLen = int(socket.recv(4).decode())
     hmacToVerify = socket.recv(64).decode()
     print(hmacToVerify)
     receiveData=""
@@ -138,9 +137,11 @@ def addFile(userData, fileName):
     with open("serverData.json") as file:
         listUser = json.load(file)
     file.close()
-    for i in range(len(listUser)):
-        if str(userData['username']) == listUser[i]['username']:
-            listUser.remove(listUser[i])
+
+    for user in list(listUser):
+        if str(userData['username']) == user['username']:
+            listUser.remove(user)
+
     listUser.append(userData)
     with open ("serverData.json", "w") as jsonFile:
         json.dump(listUser, jsonFile, indent=4)

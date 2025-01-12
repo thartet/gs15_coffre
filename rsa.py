@@ -107,7 +107,6 @@ def main():
     text = read_file(file_path)
     pk, sk = RSA()
     encrypted_message = encrypt_text(text, pk)
-    print(len(str(encrypted_message[1])))
     print("Original text :")
     print(text)
     print("\nEncrypted message :")
